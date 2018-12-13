@@ -21,45 +21,100 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
 
 #1.Lectura de los datos
 dataChess = pd.read_csv('krkopt.txt',sep=',')
 
 #Le damos unas etiquetas a nuestras características de los datos, ya que carecen de ellas
-namesFeatures =['White King Column','White King Row','White Rook Column','White Rook Row' ,
-                'Black King Column','Black King Row','Optimal Moves(y)']
+namesFeatures =['White_King_Column','White_King_Row','White_Rook_Column','White_Rook_Row' ,
+                'Black_King_Column','Black_King_Row','Movements']
 dataChess = pd.read_csv('krkopt.txt',sep=',',names=namesFeatures)
 dataChess = dataChess.sample(frac=1).reset_index(drop=True) #Baraja los datos
-
+#%%
 #2.Descripción de los datos
 dataChess.describe(include='all')  #En la salida podemos observar como suprime las caracteristicas con la información de la 
 #fila en la que se encuentranlas fichas.
-
+#%%
 #3. MissingValues
-
-#print(dataChess.head(20))
-#print("None values: " + str((dataChess['White King File'] == None).sum()))
-#print("None values: " + str((dataChess['White King Rank'] == None).sum()))
-#print("None values: " + str((dataChess['White Rook File'] == None).sum()))
-#print("None values: " + str((dataChess['White Rook Rank'] == None).sum()))
-
+#Una de las manneras para ver si tenemos o no missing values es comprobar el número de ocurrencias de cada valor.
+for i in namesFeatures:
+    print(dataChess[i].value_counts())
+#%% Categorizar variables
 #4. OneHotEncoder
-#dataa = ['pepe', 'pepa', 'abelino']
-#vals = np.array(dataa)
-le = LabelEncoder()
-data = dataChess['White King Column'].tolist()
-values = np.array(data)
-integer_encoded = le.fit_transform(values)
-#Binary Encode, crea tres variables binarias a partir de nuestras categorías
-enc = OneHotEncoder(sparse=False)
-integer_encoded = integer_encoded.reshape(len(integer_encoded),1)
-oh_enc = enc.fit_transform(integer_encoded)
-print(oh_enc)
+    
+newDataChess = pd.DataFrame()
+for feature in namesFeatures[:-1]:
+    #feature_position = dataChess.columns.get_loc(feature)
+    newCat = pd.get_dummies(dataChess[feature])
+    
+    newKeys = []
+    for key in newCat.keys():
+        newKey = feature + "_" + str(key)
+        newKeys.append(newKey)
+        
+    newCat.columns = newKeys
+    
+    newDataChess = pd.concat([newDataChess, newCat], axis = 1, sort = False)
+    #newDataChess.insert(feature_position, newKeys, newCat)
 
-newDataframe = dataChess
-newDataFrame[['White King Column']] = oh_enc
+newDataChess = pd.concat([newDataChess, dataChess['Movements']], axis = 1, sort = False)
 
-#5. Replace Values
-arrayValuesY = dataChess['Optimal Moves(y)'].unique()
-arrayValuesY = np.array(arrayValuesY)
+#category_White_kpd.get_dummies(dataChess['White King Column')
+#category_White_King_Column.columns = ['WhiteKingColumn_A','WhiteKingColumn_B','WhiteKingColumn_C','WhiteKingColumn_D']
+#%%
+newDataChess['White_King_Column_a'].hist()
 
+#%% 
+"""
+Fase 5.Selección del modelo más adecuado y entrenamiento del algoritmo de aprendizaje.
+"""
+#Debido a que los datos no estan balanceados vamos a eliminar clases en nuestros datos
+newDataChess = newDataChess[newDataChess.Movements.isin(['fourteen','thirteen','twelve','eleven','draw','fitenn','ten','nine','eight'])]
+#newDataChess = newDataChess[newDataChess.Movements.isin(['fourteen','thirteen'])]
+
+
+#%%
+#Dividimos los datos en target y características
+newKeys = newDataChess.keys()
+X = newDataChess[newKeys[:-1]].values
+y = newDataChess['Movements'].values
+
+X_train, X_test, y_train, y_test = train_test_split(X,y)
+#%% NAIVE BAYES
+from sklearn.naive_bayes import GaussianNB
+#Creamos el modelo
+model_NB = GaussianNB()
+
+#Entrenamos nuestro modelo
+y_pred = model_NB.fit(X_train,y_train)
+
+#Predecimos las muestras de test 
+y_hat_NB = model_NB.predict(X_test)
+
+#Calculamos el accuracy
+acc = np.mean(y_test == y_hat_NB)
+print(acc)
+#%% KNN
+from sklearn.neighbors import KNeighborsClassifier
+#Creamos el modelo
+model_KNN = KNeighborsClassifier(n_neighbors=6)
+
+#Entrenamos nuestro modelo
+y_pred = model_KNN.fit(X_train,y_train)
+
+#Predecimos las muestras de test
+y_hat_modelKNN = model_KNN.predict(X_test)
+
+#Accuracy
+acc = np.mean(y_test == y_hat_modelKNN)
+print(acc)
+#%% Redes Neuronales
+from sklearn.neural_network import MLPClassifier
+
+model_RN = MLPClassifier(max_iter=1000,alpha=1e-8)
+
+model_RN.fit(X_train, y_train) 
+y_hat_RN = model_RN.predict(X_test)
+acc = np.mean(y_hat_RN == y_test)
+print(acc)
