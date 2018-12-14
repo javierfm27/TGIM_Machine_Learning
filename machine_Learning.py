@@ -40,6 +40,37 @@ dataChess.describe(include='all')  #En la salida podemos observar como suprime l
 #Una de las manneras para ver si tenemos o no missing values es comprobar el número de ocurrencias de cada valor.
 for i in namesFeatures:
     print(dataChess[i].value_counts())
+#%% Representación de los datos
+#Posición de rey blanca
+# Gráfico de tarta de pasajeros del Titanic
+plt.subplot(321)
+dataChess['White_King_Column'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Columna de Rey Blanco')
+plt.subplot(322)
+dataChess['White_King_Row'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Fila de Rey Blanco')
+plt.subplot(323)
+dataChess['White_Rook_Column'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Columna de Torre Blanca')
+plt.subplot(324)
+dataChess['White_Rook_Row'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Fila de Torre Blanca')
+plt.subplot(325)
+dataChess['Black_King_Column'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Columna de Rey Negro')
+plt.subplot(326)
+dataChess['Black_King_Row'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Fila de Rey Negro')
+plt.figure()
+dataChess['Movements'].value_counts().plot(kind='pie', autopct='%.2f', 
+                                            figsize=(6, 6),
+                                            title='Movimientos para ganar')
 #%% Categorizar variables
 #4. OneHotEncoder
     
@@ -64,14 +95,15 @@ newDataChess = pd.concat([newDataChess, dataChess['Movements']], axis = 1, sort 
 #category_White_King_Column.columns = ['WhiteKingColumn_A','WhiteKingColumn_B','WhiteKingColumn_C','WhiteKingColumn_D']
 #%%
 newDataChess['White_King_Column_a'].hist()
+dataChess.hist()
 
 #%% 
 """
 Fase 5.Selección del modelo más adecuado y entrenamiento del algoritmo de aprendizaje.
 """
 #Debido a que los datos no estan balanceados vamos a eliminar clases en nuestros datos
-newDataChess = newDataChess[newDataChess.Movements.isin(['fourteen','thirteen','twelve','eleven','draw','fitenn','ten','nine','eight'])]
-#newDataChess = newDataChess[newDataChess.Movements.isin(['fourteen','thirteen'])]
+#newDataChess = newDataChess[newDataChess.Movements.isin(['fourteen','thirteen','twelve','eleven','draw','fitenn','ten','nine','eight'])]
+newDataChess = newDataChess[newDataChess.Movements.isin(['fourteen','thirteen'])]
 
 
 #%%
